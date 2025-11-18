@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - 'claude/**'
   pull_request:
     branches:
       - main
@@ -38,16 +37,16 @@ jobs:
     container:
       image: swift:5.9
     steps:
+      - name: Install git
+        run: |
+          apt-get update
+          apt-get install -y git
+
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Fix git safe directory
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
       - name: Install dependencies
-        run: |
-          apt-get update
-          apt-get install -y libsodium-dev
+        run: apt-get install -y libsodium-dev
 
       - name: Check Swift version
         run: swift --version
