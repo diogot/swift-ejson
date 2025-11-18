@@ -19,9 +19,6 @@ jobs:
       - name: Check Swift version
         run: swift --version
 
-      - name: Install libsodium
-        run: brew install libsodium
-
       - name: Build
         run: swift build
 

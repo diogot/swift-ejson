@@ -16,9 +16,6 @@ jobs:
       - name: Check Swift version
         run: swift --version
 
-      - name: Install libsodium
-        run: brew install libsodium
-
       - name: Get version from tag
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT

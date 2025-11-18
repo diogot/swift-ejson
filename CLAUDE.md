@@ -168,20 +168,19 @@ The library has been fully implemented with:
 
 ## Installing Swift for Testing
 
-This project requires **Swift 6.2** or later.
+This project requires **Swift 5.9** or later.
 
 ### Prerequisites
 
-**IMPORTANT:** Install libsodium first (required for EJSONKit cryptography):
+**Linux only:** Install libsodium-dev (required for EJSONKit cryptography on Linux):
 
 ```bash
 # Ubuntu/Debian
 sudo apt-get update
 sudo apt-get install -y libsodium-dev
-
-# macOS (using Homebrew)
-brew install libsodium
 ```
+
+**macOS:** No additional dependencies needed. The swift-sodium package includes bundled libsodium (Clibsodium.xcframework) for Apple platforms.
 
 ### Option 1: Direct Download from swift.org (Recommended)
 
@@ -310,7 +309,7 @@ warning: Using a system installation of libsodium - This is unsupported.
 Build complete! (2.00s)
 ```
 
-**Note:** The warning about using system libsodium is expected and safe to ignore. The library will work correctly with the system-installed libsodium.
+**Note:** On Linux, you may see a warning "Using a system installation of libsodium - This is unsupported." This is expected and safe to ignore. The library will work correctly with the system-installed libsodium. On macOS, the bundled Clibsodium.xcframework is used automatically with no warnings.
 
 ### Run the test suite
 ```bash

@@ -325,8 +325,9 @@ cp .build/release/ejson /usr/local/bin/
 ```
 
 **Requirements:**
-- Swift 6.2+
-- libsodium (`brew install libsodium` on macOS)
+- Swift 5.9+
+- Linux only: libsodium-dev (`apt-get install libsodium-dev`)
+- macOS: No additional dependencies (uses bundled libsodium)
 
 ### Usage
 
@@ -423,12 +424,13 @@ swift test
 
 ## Dependencies
 
-- [swift-sodium](https://github.com/jedisct1/swift-sodium) (v0.9.1+) - Provides NaCl cryptography primitives
+- [swift-sodium](https://github.com/jedisct1/swift-sodium) (v0.9.1+) - Provides NaCl cryptography primitives with bundled libsodium
 
 ## Requirements
 
-- Swift 6.2+
+- Swift 5.9+
 - macOS 10.15+ / iOS 13+ / tvOS 13+ / watchOS 6+
+- Linux: libsodium-dev package required
 
 ## Contributing
 
