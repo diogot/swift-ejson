@@ -34,16 +34,13 @@ jobs:
     container:
       image: swift:5.9
     steps:
-      - name: Install git
-        run: |
-          apt-get update
-          apt-get install -y git
-
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: apt-get install -y libsodium-dev
+        run: |
+          apt-get update
+          apt-get install -y libsodium-dev
 
       - name: Check Swift version
         run: swift --version
