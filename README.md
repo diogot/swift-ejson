@@ -278,6 +278,98 @@ try ejson.encryptFile(at: "secrets.json", publicKey: publicKey)
 let secrets = try ejson.decryptFile(at: "secrets.json", privateKey: privateKey)
 ```
 
+## Command Line Interface
+
+EJSONKit includes a command-line tool compatible with the [Go EJSON CLI](https://github.com/Shopify/ejson).
+
+### Installation
+
+Build the CLI:
+
+```bash
+swift build -c release
+```
+
+The executable will be at `.build/release/ejson`. You can copy it to your PATH:
+
+```bash
+cp .build/release/ejson /usr/local/bin/
+```
+
+### Usage
+
+```
+ejson <command> [options]
+
+Commands:
+  keygen            Generate a new keypair
+  encrypt <file>... Encrypt one or more EJSON files
+  decrypt <file>    Decrypt an EJSON file
+
+Global Options:
+  -keydir <path>    Path to keydir (default: /opt/ejson/keys or $EJSON_KEYDIR)
+
+Keygen Options:
+  -w                Write private key to keydir and print only public key
+```
+
+### CLI Examples
+
+**Generate a keypair:**
+
+```bash
+# Print both keys to stdout
+ejson keygen
+
+# Write private key to keydir, print only public key
+ejson keygen -w
+```
+
+**Encrypt a file:**
+
+```bash
+# Create a secrets file
+cat > secrets.json << EOF
+{
+  "_public_key": "your_public_key_here",
+  "database_password": "secret123",
+  "api_key": "my_api_key"
+}
+EOF
+
+# Encrypt it (modifies file in-place)
+ejson encrypt secrets.json
+```
+
+**Decrypt a file:**
+
+```bash
+# Decrypt and print to stdout (doesn't modify file)
+ejson decrypt secrets.json
+```
+
+**Custom keydir:**
+
+```bash
+# Using environment variable
+export EJSON_KEYDIR=~/.ejson/keys
+ejson decrypt secrets.json
+
+# Using command line option
+ejson -keydir ~/.ejson/keys decrypt secrets.json
+```
+
+### Key Storage
+
+Private keys are stored in the keydir (default: `/opt/ejson/keys` or `$EJSON_KEYDIR`) with the filename matching the public key:
+
+```
+/opt/ejson/keys/
+  └── 63ccf05a9492e68e12eeb1c705888aebdcc0080af7e594fc402beb24cce9d14f
+```
+
+Keys are saved with `0600` permissions (readable only by owner).
+
 ## Testing
 
 The library includes comprehensive tests covering:

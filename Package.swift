@@ -16,6 +16,9 @@ let package = Package(
         .library(
             name: "EJSONKit",
             targets: ["EJSONKit"]),
+        .executable(
+            name: "ejson",
+            targets: ["ejson"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -28,6 +31,9 @@ let package = Package(
             dependencies: [
                 .product(name: "Clibsodium", package: "swift-sodium")
             ]),
+        .executableTarget(
+            name: "ejson",
+            dependencies: ["EJSONKit"]),
         .testTarget(
             name: "EJSONKitTests",
             dependencies: ["EJSONKit"]),
