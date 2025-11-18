@@ -148,6 +148,7 @@ func encryptCommand(args: [String]) {
 func decryptCommand(args: [String]) {
     var keyDir = getKeyDir()
     var file: String?
+    var keyFromStdin = false
     var i = 0
 
     // Parse options
@@ -159,6 +160,9 @@ func decryptCommand(args: [String]) {
                 exitWithError("Missing value for -keydir option")
             }
             keyDir = args[i]
+            i += 1
+        } else if arg == "--key-from-stdin" {
+            keyFromStdin = true
             i += 1
         } else if file == nil {
             file = arg
@@ -179,7 +183,17 @@ func decryptCommand(args: [String]) {
         let publicKey = try ejson.extractPublicKey(from: filePath)
 
         // Load private key
-        let privateKey = try loadPrivateKey(publicKey: publicKey, keyDir: keyDir)
+        let privateKey: String
+        if keyFromStdin {
+            // Read private key from stdin
+            guard let stdinData = try? FileHandle.standardInput.readToEnd(),
+                  let stdinString = String(data: stdinData, encoding: .utf8) else {
+                exitWithError("Failed to read private key from stdin")
+            }
+            privateKey = stdinString.trimmingCharacters(in: .whitespacesAndNewlines)
+        } else {
+            privateKey = try loadPrivateKey(publicKey: publicKey, keyDir: keyDir)
+        }
 
         // Decrypt the file
         let decrypted = try ejson.decryptFile(at: filePath, privateKey: privateKey)
@@ -211,12 +225,16 @@ func printUsage() {
     Keygen Options:
       -w                Write private key to keydir and print only public key
 
+    Decrypt Options:
+      --key-from-stdin  Read private key from stdin instead of keydir
+
     Examples:
       ejson keygen
       ejson keygen -w
       ejson encrypt secrets.ejson
       ejson decrypt secrets.ejson
       ejson -keydir ~/.ejson/keys decrypt secrets.ejson
+      echo "your_private_key" | ejson decrypt --key-from-stdin secrets.ejson
     """)
 }
 
