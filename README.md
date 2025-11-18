@@ -284,17 +284,50 @@ EJSONKit includes a command-line tool compatible with the [Go EJSON CLI](https:/
 
 ### Installation
 
-Build the CLI:
+#### Pre-built Binaries (Recommended)
+
+Download the latest release for your platform from [GitHub Releases](https://github.com/diogot/swift-ejson/releases):
+
+**macOS (Universal Binary - Intel & Apple Silicon):**
 
 ```bash
-swift build -c release
+# Download and install the latest version
+VERSION="1.0.0"  # Replace with latest version
+curl -L "https://github.com/diogot/swift-ejson/releases/download/v${VERSION}/ejson-${VERSION}-macos-universal.tar.gz" | tar xz
+sudo mv ejson /usr/local/bin/
+ejson help
 ```
 
-The executable will be at `.build/release/ejson`. You can copy it to your PATH:
+**Verify the checksum:**
 
 ```bash
+# Download checksum
+curl -L "https://github.com/diogot/swift-ejson/releases/download/v${VERSION}/ejson-${VERSION}-macos-universal.tar.gz.sha256" -o ejson.sha256
+
+# Verify
+shasum -a 256 -c ejson.sha256
+```
+
+#### Build from Source
+
+If you prefer to build from source:
+
+```bash
+# Clone the repository
+git clone https://github.com/diogot/swift-ejson.git
+cd swift-ejson
+
+# Build the CLI
+swift build -c release
+
+# Install to PATH
 cp .build/release/ejson /usr/local/bin/
 ```
+
+**Requirements:**
+- Swift 5.9+
+- Linux only: libsodium-dev (`apt-get install libsodium-dev`)
+- macOS: No additional dependencies (uses bundled libsodium)
 
 ### Usage
 
@@ -391,12 +424,13 @@ swift test
 
 ## Dependencies
 
-- [swift-sodium](https://github.com/jedisct1/swift-sodium) (v0.9.1+) - Provides NaCl cryptography primitives
+- [swift-sodium](https://github.com/jedisct1/swift-sodium) (v0.9.1+) - Provides NaCl cryptography primitives with bundled libsodium
 
 ## Requirements
 
-- Swift 6.2+
+- Swift 5.9+
 - macOS 10.15+ / iOS 13+ / tvOS 13+ / watchOS 6+
+- Linux: libsodium-dev package required
 
 ## Contributing
 

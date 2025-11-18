@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-macos:
+    name: Build macOS Universal Binary
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Swift version
+        run: swift --version
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Run tests
+        run: swift test
+
+      - name: Build release binary
+        run: ./scripts/build-release.sh ${{ steps.get_version.outputs.VERSION }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-universal
+          path: |
+            release/*.tar.gz
+            release/*.sha256
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-universal
+          path: release/
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat > release_notes.md << 'EOF'
+          ## Installation
+
+          ### macOS (Universal Binary - x86_64 + ARM64)
+
+          Download and install:
+          ```bash
+          curl -L https://github.com/${{ github.repository }}/releases/download/v${{ steps.get_version.outputs.VERSION }}/ejson-${{ steps.get_version.outputs.VERSION }}-macos-universal.tar.gz | tar xz
+          sudo mv ejson /usr/local/bin/
+          ejson --version
+          ```
+
+          Or with wget:
+          ```bash
+          wget https://github.com/${{ github.repository }}/releases/download/v${{ steps.get_version.outputs.VERSION }}/ejson-${{ steps.get_version.outputs.VERSION }}-macos-universal.tar.gz
+          tar xzf ejson-${{ steps.get_version.outputs.VERSION }}-macos-universal.tar.gz
+          sudo mv ejson /usr/local/bin/
+          ejson --version
+          ```
+
+          ### Verify Checksum
+
+          ```bash
+          # Download checksum file
+          curl -L https://github.com/${{ github.repository }}/releases/download/v${{ steps.get_version.outputs.VERSION }}/ejson-${{ steps.get_version.outputs.VERSION }}-macos-universal.tar.gz.sha256 -o ejson.sha256
+
+          # Verify (macOS)
+          shasum -a 256 -c ejson.sha256
+
+          # Verify (Linux)
+          sha256sum -c ejson.sha256
+          ```
+
+          ## Features
+
+          - 🔐 NaCl Box encryption compatible with Shopify EJSON
+          - 🔄 Full compatibility with Go EJSON implementation
+          - ⚡ Fast and native Swift implementation
+          - 📦 Universal macOS binary (works on both Intel and Apple Silicon)
+
+          ## Usage
+
+          ```bash
+          # Generate a keypair
+          ejson keygen
+
+          # Encrypt a file
+          ejson encrypt secrets.json
+
+          # Decrypt a file
+          ejson decrypt secrets.json
+          ```
+
+          For more information, see the [README](https://github.com/${{ github.repository }}/blob/main/README.md).
+          EOF
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release_notes.md
+          files: |
+            release/*.tar.gz
+            release/*.sha256
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
