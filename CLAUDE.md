@@ -168,20 +168,51 @@ The library has been fully implemented with:
 
 ## Installing Swift for Testing
 
-### Option 1: Download from swift.org (Recommended)
+This project requires **Swift 6.2** or later.
+
+### Option 1: Using Swiftly (Recommended)
+
+Swiftly is the official Swift toolchain manager for Linux:
+
+**Install Swiftly and Swift:**
+```bash
+# Download and install Swiftly
+curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz && \
+tar zxf swiftly-$(uname -m).tar.gz && \
+./swiftly init --quiet-shell-followup && \
+. "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh" && \
+hash -r
+
+# Install Swift 6.2
+swiftly install latest
+
+# Verify installation
+swift --version
+```
+
+For **Fish shell** users:
+```bash
+curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz && \
+tar zxf swiftly-$(uname -m).tar.gz && \
+./swiftly init --quiet-shell-followup && \
+set -q SWIFTLY_HOME_DIR && \
+source "$SWIFTLY_HOME_DIR/env.fish" || source ~/.local/share/swiftly/env.fish
+```
+
+### Option 2: Direct Download from swift.org
 
 For **Ubuntu 22.04/24.04** (x86_64):
 
 ```bash
-# Download Swift 5.9.2 (or newer)
+# Download Swift 6.2.1
 cd /tmp
-wget https://download.swift.org/swift-5.9.2-release/ubuntu2204/swift-5.9.2-RELEASE/swift-5.9.2-RELEASE-ubuntu22.04.tar.gz
+wget https://download.swift.org/swift-6.2.1-release/ubuntu2204/swift-6.2.1-RELEASE/swift-6.2.1-RELEASE-ubuntu22.04.tar.gz
 
 # Extract
-tar xzf swift-5.9.2-RELEASE-ubuntu22.04.tar.gz
+tar xzf swift-6.2.1-RELEASE-ubuntu22.04.tar.gz
 
 # Move to /opt
-sudo mv swift-5.9.2-RELEASE-ubuntu22.04 /opt/swift
+sudo mv swift-6.2.1-RELEASE-ubuntu22.04 /opt/swift
 
 # Add to PATH
 echo 'export PATH=/opt/swift/usr/bin:$PATH' >> ~/.bashrc
@@ -195,14 +226,14 @@ For **macOS**:
 
 Install via Xcode Command Line Tools or download from swift.org:
 ```bash
-# Install Xcode Command Line Tools
+# Install Xcode Command Line Tools (includes Swift 6.2)
 xcode-select --install
 
-# Or download from https://swift.org/download/
+# Or download from https://www.swift.org/install/
 # and follow the installer instructions
 ```
 
-### Option 2: Using swiftenv
+### Option 3: Using swiftenv
 
 ```bash
 # Install swiftenv
@@ -214,9 +245,9 @@ echo 'export PATH="$SWIFTENV_ROOT/bin:$PATH"' >> ~/.bashrc
 echo 'eval "$(swiftenv init -)"' >> ~/.bashrc
 source ~/.bashrc
 
-# Install Swift 5.9.2
-swiftenv install 5.9.2
-swiftenv global 5.9.2
+# Install Swift 6.2
+swiftenv install 6.2
+swiftenv global 6.2
 ```
 
 ### Installing Dependencies

@@ -303,7 +303,7 @@ swift test
 
 ## Requirements
 
-- Swift 5.9+
+- Swift 6.2+
 - macOS 10.15+ / iOS 13+ / tvOS 13+ / watchOS 6+
 
 ## Contributing
