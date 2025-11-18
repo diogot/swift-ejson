@@ -168,41 +168,85 @@ The library has been fully implemented with:
 
 ## Installing Swift for Testing
 
-### Option 1: Download from swift.org (Recommended)
+This project requires **Swift 6.2** or later.
 
-For **Ubuntu 22.04/24.04** (x86_64):
+### Prerequisites
+
+**IMPORTANT:** Install libsodium first (required for EJSONKit cryptography):
 
 ```bash
-# Download Swift 5.9.2 (or newer)
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install -y libsodium-dev
+
+# macOS (using Homebrew)
+brew install libsodium
+```
+
+### Option 1: Direct Download from swift.org (Recommended)
+
+This is the most reliable method for getting Swift 6.2.1.
+
+**For Ubuntu 22.04/24.04 (x86_64):**
+
+```bash
+# Download Swift 6.2.1
 cd /tmp
-wget https://download.swift.org/swift-5.9.2-release/ubuntu2204/swift-5.9.2-RELEASE/swift-5.9.2-RELEASE-ubuntu22.04.tar.gz
+wget https://download.swift.org/swift-6.2.1-release/ubuntu2204/swift-6.2.1-RELEASE/swift-6.2.1-RELEASE-ubuntu22.04.tar.gz
 
 # Extract
-tar xzf swift-5.9.2-RELEASE-ubuntu22.04.tar.gz
+tar xzf swift-6.2.1-RELEASE-ubuntu22.04.tar.gz
 
-# Move to /opt
-sudo mv swift-5.9.2-RELEASE-ubuntu22.04 /opt/swift
-
-# Add to PATH
+# Option A: Install system-wide (requires sudo)
+sudo mv swift-6.2.1-RELEASE-ubuntu22.04 /opt/swift
 echo 'export PATH=/opt/swift/usr/bin:$PATH' >> ~/.bashrc
+
+# Option B: Install to user directory (no sudo required)
+mkdir -p ~/.local/swift
+mv swift-6.2.1-RELEASE-ubuntu22.04 ~/.local/swift/6.2.1
+echo 'export PATH=$HOME/.local/swift/6.2.1/usr/bin:$PATH' >> ~/.bashrc
+
+# Reload shell configuration
 source ~/.bashrc
+
+# Verify installation
+swift --version
+# Should output: Swift version 6.2.1 (swift-6.2.1-RELEASE)
+```
+
+**For macOS:**
+
+```bash
+# Install Xcode Command Line Tools (includes Swift 6.2+)
+xcode-select --install
+
+# Or download the latest Swift toolchain from:
+# https://www.swift.org/install/macos/
+# and follow the installer instructions
+```
+
+### Option 2: Using Swiftly
+
+Swiftly is the official Swift toolchain manager for Linux. Note that it requires network access and may have connectivity issues in some environments.
+
+```bash
+# Download and install Swiftly
+curl -O https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz
+tar zxf swiftly-$(uname -m).tar.gz
+echo "Y" | ./swiftly init --skip-install --quiet-shell-followup
+
+# Load Swiftly environment
+source "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
+hash -r
+
+# Install Swift 6.2 (requires network access)
+swiftly install latest
 
 # Verify installation
 swift --version
 ```
 
-For **macOS**:
-
-Install via Xcode Command Line Tools or download from swift.org:
-```bash
-# Install Xcode Command Line Tools
-xcode-select --install
-
-# Or download from https://swift.org/download/
-# and follow the installer instructions
-```
-
-### Option 2: Using swiftenv
+### Option 3: Using swiftenv
 
 ```bash
 # Install swiftenv
@@ -214,29 +258,27 @@ echo 'export PATH="$SWIFTENV_ROOT/bin:$PATH"' >> ~/.bashrc
 echo 'eval "$(swiftenv init -)"' >> ~/.bashrc
 source ~/.bashrc
 
-# Install Swift 5.9.2
-swiftenv install 5.9.2
-swiftenv global 5.9.2
+# Install Swift 6.2
+swiftenv install 6.2
+swiftenv global 6.2
 ```
 
-### Installing Dependencies
+### Additional System Dependencies
 
-Swift requires several system libraries:
+Swift requires several system libraries on Linux:
 
 **Ubuntu/Debian:**
 ```bash
 sudo apt-get update
-sudo apt-get install \
+sudo apt-get install -y \
   binutils \
   git \
   gnupg2 \
   libc6-dev \
   libcurl4-openssl-dev \
   libedit2 \
-  libgcc-9-dev \
   libpython3.8 \
   libsqlite3-0 \
-  libstdc++-9-dev \
   libxml2-dev \
   libz3-dev \
   pkg-config \
@@ -247,7 +289,7 @@ sudo apt-get install \
 
 ## Building and Testing the Library
 
-Once Swift is installed:
+Once Swift and libsodium are installed:
 
 ### Build the library
 ```bash
@@ -258,9 +300,17 @@ swift build
 Expected output:
 ```
 Fetching https://github.com/jedisct1/swift-sodium.git
-...
-Build complete!
+Fetched https://github.com/jedisct1/swift-sodium.git from cache
+Computing version for https://github.com/jedisct1/swift-sodium.git
+Computed https://github.com/jedisct1/swift-sodium.git at 0.9.1
+Building for debugging...
+[2/3] Emitting module EJSONKit
+warning: Using a system installation of libsodium - This is unsupported.
+[3/3] Compiling EJSONKit EJSON.swift
+Build complete! (2.00s)
 ```
+
+**Note:** The warning about using system libsodium is expected and safe to ignore. The library will work correctly with the system-installed libsodium.
 
 ### Run the test suite
 ```bash
@@ -269,9 +319,20 @@ swift test
 
 Expected output:
 ```
+Test Suite 'All tests' started at...
+Test Suite 'EJSONKitTests' started at...
+[... 30 test cases ...]
 Test Suite 'All tests' passed at...
-Executed 25+ tests, with 0 failures
+	 Executed 30 tests, with 0 failures (0 unexpected) in 0.294 seconds
 ```
+
+All 30 tests should pass, including:
+- Key generation and validation tests
+- Encryption/decryption tests
+- JSON processing tests
+- File operations tests
+- Unicode and special character handling
+- Performance benchmarks
 
 ### Run specific tests
 ```bash

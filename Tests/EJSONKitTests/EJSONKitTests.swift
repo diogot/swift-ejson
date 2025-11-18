@@ -255,7 +255,11 @@ final class EJSONKitTests: XCTestCase {
 
         // Verify other types are preserved
         XCTAssertEqual(decrypted["number"] as? Int, 42)
-        XCTAssertEqual(decrypted["float"] as? Double, 3.14, accuracy: 0.001)
+        if let floatValue = decrypted["float"] as? Double {
+            XCTAssertEqual(floatValue, 3.14, accuracy: 0.001)
+        } else {
+            XCTFail("Expected float value")
+        }
         XCTAssertEqual(decrypted["bool"] as? Bool, true)
         XCTAssertTrue(decrypted["null"] is NSNull)
     }
