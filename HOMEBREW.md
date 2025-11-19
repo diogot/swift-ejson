@@ -87,38 +87,56 @@ brew untap diogot/ejson
 
 ## Updating the Formula for New Releases
 
-When a new version is released:
+### Automated Updates (Recommended)
 
-1. **Download the new release tarball**:
+The formula is **automatically updated** when a release is created using the GitHub Actions workflow. The maintainer only needs to:
+
+1. Update version in `Sources/EJSONKit/Version.swift`
+2. Trigger the "Create Release" workflow
+3. Everything else happens automatically:
+   - Git tag created
+   - Binary built
+   - Release created
+   - **Formula updated with correct SHA256**
+
+See [RELEASING.md](RELEASING.md) for complete instructions.
+
+### Manual Updates (If Needed)
+
+If you need to manually update the formula:
+
+1. **Use the update script**:
    ```bash
-   VERSION="1.1.0"  # New version
-   curl -L -o ejson.tar.gz "https://github.com/diogot/swift-ejson/releases/download/v${VERSION}/ejson-${VERSION}-macos-universal.tar.gz"
-   ```
+   # This script downloads the release and updates the formula
+   ./scripts/update-formula.sh 1.1.0
 
-2. **Calculate the SHA256**:
-   ```bash
-   shasum -a 256 ejson.tar.gz
-   # Output: abc123def456...
-   ```
+   # Review the changes
+   git diff Formula/ejson.rb
 
-3. **Update the formula** in `homebrew-ejson/Formula/ejson.rb`:
-   - Update the `version` line
-   - Update the `url` with the new version number
-   - Update the `sha256` with the new checksum
-
-4. **Commit and push**:
-   ```bash
-   cd homebrew-ejson
+   # Commit and push
    git add Formula/ejson.rb
-   git commit -m "Update ejson to v${VERSION}"
+   git commit -m "Update formula to v1.1.0"
    git push origin main
    ```
 
-5. **Users can then upgrade**:
+2. **For separate tap repository**:
+   ```bash
+   cd homebrew-ejson
+   cp ../swift-ejson/Formula/ejson.rb Formula/
+   git add Formula/ejson.rb
+   git commit -m "Update ejson to v1.1.0"
+   git push origin main
+   ```
+
+3. **Users can then upgrade**:
    ```bash
    brew update
    brew upgrade ejson
    ```
+
+### Version Management
+
+Version is centrally managed in `Sources/EJSONKit/Version.swift`. All releases and formula updates sync from this single source. This ensures the binary version, git tags, GitHub releases, and Homebrew formula are always in sync.
 
 ## Testing the Formula Locally
 

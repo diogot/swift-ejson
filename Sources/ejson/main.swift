@@ -211,8 +211,8 @@ func decryptCommand(args: [String]) {
 }
 
 func printVersion() {
-    print("ejson version 1.0.0")
-    print("Swift EJSON - Compatible with Shopify EJSON")
+    print(Version.full)
+    print(Version.description)
 }
 
 func printUsage() {

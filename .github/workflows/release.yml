@@ -1,4 +1,8 @@
-name: Release
+name: Release (Tag-based)
+
+# This workflow is kept for backward compatibility
+# The recommended approach is to use the "Create Release" workflow (create-release.yml)
+# which reads version from code and automates everything
 
 on:
   push:

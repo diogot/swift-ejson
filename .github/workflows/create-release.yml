@@ -1,0 +1,250 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "release" to confirm'
+        required: true
+        default: ''
+
+jobs:
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      tag: ${{ steps.get_version.outputs.tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "release" ]; then
+            echo "Error: You must type 'release' to confirm"
+            exit 1
+          fi
+
+      - name: Get version from code
+        id: get_version
+        run: |
+          VERSION=$(./scripts/get-version.sh)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+          echo "Version to release: $VERSION"
+
+      - name: Check if tag exists
+        run: |
+          if git ls-remote --tags origin | grep -q "refs/tags/${{ steps.get_version.outputs.tag }}"; then
+            echo "Error: Tag ${{ steps.get_version.outputs.tag }} already exists"
+            echo "Please update the version in Sources/EJSONKit/Version.swift"
+            exit 1
+          fi
+          echo "Tag ${{ steps.get_version.outputs.tag }} does not exist - OK to proceed"
+
+      - name: Run tests
+        run: |
+          swift test
+
+  build-macos:
+    name: Build macOS Universal Binary
+    needs: validate
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Swift version
+        run: swift --version
+
+      - name: Run tests
+        run: swift test
+
+      - name: Build release binary
+        run: ./scripts/build-release.sh ${{ needs.validate.outputs.version }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-universal
+          path: |
+            release/*.tar.gz
+            release/*.sha256
+
+  create-release:
+    name: Create GitHub Release
+    needs: [validate, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      sha256: ${{ steps.get_sha.outputs.sha256 }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-universal
+          path: release/
+
+      - name: Get SHA256
+        id: get_sha
+        run: |
+          SHA256=$(cat release/ejson-${{ needs.validate.outputs.version }}-macos-universal.tar.gz.sha256 | awk '{print $1}')
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
+          echo "SHA256: $SHA256"
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a ${{ needs.validate.outputs.tag }} -m "Release version ${{ needs.validate.outputs.version }}"
+          git push origin ${{ needs.validate.outputs.tag }}
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat > release_notes.md << 'EOF'
+          ## Installation
+
+          ### Homebrew (Recommended for macOS)
+
+          ```bash
+          # Via tap
+          brew tap diogot/ejson
+          brew install ejson
+
+          # Or direct installation
+          brew install https://raw.githubusercontent.com/diogot/swift-ejson/main/Formula/ejson.rb
+          ```
+
+          ### macOS (Universal Binary - x86_64 + ARM64)
+
+          Download and install:
+          ```bash
+          curl -L https://github.com/${{ github.repository }}/releases/download/${{ needs.validate.outputs.tag }}/ejson-${{ needs.validate.outputs.version }}-macos-universal.tar.gz | tar xz
+          sudo mv ejson /usr/local/bin/
+          ejson --version
+          ```
+
+          Or with wget:
+          ```bash
+          wget https://github.com/${{ github.repository }}/releases/download/${{ needs.validate.outputs.tag }}/ejson-${{ needs.validate.outputs.version }}-macos-universal.tar.gz
+          tar xzf ejson-${{ needs.validate.outputs.version }}-macos-universal.tar.gz
+          sudo mv ejson /usr/local/bin/
+          ejson --version
+          ```
+
+          ### Verify Checksum
+
+          ```bash
+          # Download checksum file
+          curl -L https://github.com/${{ github.repository }}/releases/download/${{ needs.validate.outputs.tag }}/ejson-${{ needs.validate.outputs.version }}-macos-universal.tar.gz.sha256 -o ejson.sha256
+
+          # Verify (macOS)
+          shasum -a 256 -c ejson.sha256
+
+          # Verify (Linux)
+          sha256sum -c ejson.sha256
+          ```
+
+          ## Features
+
+          - 🔐 NaCl Box encryption compatible with Shopify EJSON
+          - 🔄 Full compatibility with Go EJSON implementation
+          - ⚡ Fast and native Swift implementation
+          - 📦 Universal macOS binary (works on both Intel and Apple Silicon)
+
+          ## Usage
+
+          ```bash
+          # Generate a keypair
+          ejson keygen
+
+          # Encrypt a file
+          ejson encrypt secrets.json
+
+          # Decrypt a file
+          ejson decrypt secrets.json
+          ```
+
+          For more information, see the [README](https://github.com/${{ github.repository }}/blob/main/README.md).
+          EOF
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.validate.outputs.tag }}
+          name: Release ${{ needs.validate.outputs.version }}
+          body_path: release_notes.md
+          files: |
+            release/*.tar.gz
+            release/*.sha256
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-formula:
+    name: Update Homebrew Formula
+    needs: [validate, create-release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update formula with SHA256
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          SHA256="${{ needs.create-release.outputs.sha256 }}"
+          FORMULA_FILE="Formula/ejson.rb"
+
+          echo "Updating formula..."
+          echo "Version: $VERSION"
+          echo "SHA256: $SHA256"
+
+          # Update version
+          sed -i "s/version \".*\"/version \"${VERSION}\"/" "$FORMULA_FILE"
+
+          # Update URL
+          sed -i "s|download/v[0-9.]\+/ejson-[0-9.]\+-macos-universal.tar.gz|download/v${VERSION}/ejson-${VERSION}-macos-universal.tar.gz|g" "$FORMULA_FILE"
+
+          # Update SHA256
+          sed -i "s/sha256 \".*\"/sha256 \"${SHA256}\"/" "$FORMULA_FILE"
+
+          echo "Formula updated:"
+          cat "$FORMULA_FILE"
+
+      - name: Commit and push formula
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/ejson.rb
+          git commit -m "Update Homebrew formula to v${{ needs.validate.outputs.version }}"
+          git push origin main
+
+      - name: Summary
+        run: |
+          echo "## Release Created Successfully! 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.validate.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** ${{ needs.validate.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "**SHA256:** ${{ needs.create-release.outputs.sha256 }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Installation" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "brew tap diogot/ejson" >> $GITHUB_STEP_SUMMARY
+          echo "brew install ejson" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Test the installation: \`brew install ejson\`" >> $GITHUB_STEP_SUMMARY
+          echo "2. If using a separate tap, copy Formula/ejson.rb to homebrew-ejson repo" >> $GITHUB_STEP_SUMMARY
+          echo "3. Announce the release" >> $GITHUB_STEP_SUMMARY

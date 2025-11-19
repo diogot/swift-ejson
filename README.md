@@ -454,6 +454,10 @@ swift test
 - macOS 10.15+ / iOS 13+ / tvOS 13+ / watchOS 6+
 - Linux: libsodium-dev package required
 
+## Version Management
+
+Version is managed centrally in `Sources/EJSONKit/Version.swift`. All components (binary, releases, tags, Homebrew formula) automatically sync from this file. See [VERSION_MANAGEMENT.md](VERSION_MANAGEMENT.md) for details.
+
 ## Contributing
 
 Contributions are welcome! Please ensure:
@@ -462,6 +466,7 @@ Contributions are welcome! Please ensure:
 - New features include tests
 - Code follows Swift conventions
 - Changes maintain compatibility with Go EJSON
+- Don't manually update version numbers (handled by maintainers)
 
 ## License
 

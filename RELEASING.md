@@ -2,81 +2,134 @@
 
 This document describes how to create a new release of swift-ejson.
 
+## Version Management
+
+**Version is defined in code** - The single source of truth for version information is:
+```
+Sources/EJSONKit/Version.swift
+```
+
+All version references (binary, releases, tags, Homebrew formula) automatically sync from this file.
+
 ## Prerequisites
 
 - Write access to the repository
 - All tests passing on main branch
-- Updated CHANGELOG (if applicable)
+- All changes merged to main
 
-## Release Steps
+## Recommended Release Process (Automated)
 
-### 1. Prepare the Release
+### 1. Update the Version
 
-Ensure all changes for the release are merged to the main branch:
+Edit `Sources/EJSONKit/Version.swift` and update the version:
+
+```swift
+public static let current = "1.0.0"  // Change to your new version
+```
+
+Commit and push to main:
 
 ```bash
 git checkout main
-git pull origin main
+git add Sources/EJSONKit/Version.swift
+git commit -m "Bump version to 1.0.0"
+git push origin main
 ```
 
-### 2. Update Version References
+### 2. Trigger the Release Workflow
 
-Update version references in documentation if needed:
-
-- README.md (example version numbers in CLI installation)
-- Package.swift (if you maintain a version constant)
-
-### 3. Create and Push a Tag
-
-Create a version tag following semantic versioning (vMAJOR.MINOR.PATCH):
-
-```bash
-# Create an annotated tag
-git tag -a v1.0.0 -m "Release version 1.0.0"
-
-# Push the tag to GitHub
-git push origin v1.0.0
+Go to the GitHub Actions page:
+```
+https://github.com/diogot/swift-ejson/actions/workflows/create-release.yml
 ```
 
-### 4. Automated Build Process
+1. Click "Run workflow"
+2. Type "release" to confirm
+3. Click "Run workflow" button
 
-Once you push the tag, GitHub Actions will automatically:
+### 3. Automated Process
 
-1. **Run Tests** - Ensure all tests pass on macOS and Linux
-2. **Build macOS Binary** - Create a universal binary (x86_64 + ARM64)
-3. **Create Archive** - Package the binary as `.tar.gz`
-4. **Calculate Checksums** - Generate SHA256 checksums
-5. **Create GitHub Release** - Publish release with all artifacts
-6. **Upload Assets** - Attach binaries and checksums
+The workflow will automatically:
 
-You can monitor the progress at: `https://github.com/diogot/swift-ejson/actions`
+1. ✅ **Validate** - Extract version from code, check tests pass
+2. 🏗️ **Build** - Create universal macOS binary (x86_64 + ARM64)
+3. 🏷️ **Tag** - Create and push git tag (e.g., v1.0.0)
+4. 📦 **Release** - Create GitHub release with binaries
+5. 🍺 **Update Formula** - Update Homebrew formula with SHA256
+6. ✅ **Commit** - Push updated formula to main
 
-### 5. Verify the Release
+Monitor progress at: `https://github.com/diogot/swift-ejson/actions`
+
+### 4. Verify the Release
 
 After the workflow completes:
 
 1. Go to https://github.com/diogot/swift-ejson/releases
 2. Verify the release was created with:
-   - Release notes
+   - Correct version number
    - Binary archive (`.tar.gz`)
    - Checksum file (`.sha256`)
+   - Release notes
 
-### 6. Test the Release
+### 5. Test the Installation
 
-Download and test the binary:
+Test the Homebrew installation:
+
+```bash
+# Update Homebrew
+brew update
+
+# Install via direct URL
+brew install https://raw.githubusercontent.com/diogot/swift-ejson/main/Formula/ejson.rb
+
+# Or via tap (if set up)
+brew tap diogot/ejson
+brew install ejson
+
+# Verify version
+ejson --version
+```
+
+Test manual download:
 
 ```bash
 VERSION="1.0.0"
 curl -L "https://github.com/diogot/swift-ejson/releases/download/v${VERSION}/ejson-${VERSION}-macos-universal.tar.gz" | tar xz
-./ejson help
-./ejson keygen
+./ejson --version
 ```
 
-Verify the checksum:
+## Alternative: Manual Release Process
+
+If you prefer manual control or the automated workflow fails:
+
+### 1. Update Version in Code
 
 ```bash
-curl -L "https://github.com/diogot/swift-ejson/releases/download/v${VERSION}/ejson-${VERSION}-macos-universal.tar.gz.sha256" -o ejson.sha256
-shasum -a 256 -c ejson.sha256
+# Edit Sources/EJSONKit/Version.swift
+git add Sources/EJSONKit/Version.swift
+git commit -m "Bump version to 1.0.0"
+git push origin main
+```
+
+### 2. Create and Push Tag
+
+```bash
+VERSION=$(./scripts/get-version.sh)
+git tag -a v${VERSION} -m "Release version ${VERSION}"
+git push origin v${VERSION}
+```
+
+This triggers the tag-based release workflow (release.yml).
+
+### 3. Update Homebrew Formula
+
+After the release is created:
+
+```bash
+./scripts/update-formula.sh 1.0.0
+git add Formula/ejson.rb
+git commit -m "Update Homebrew formula to v1.0.0"
+git push origin main
 ```
 
 ## Versioning Guidelines
@@ -144,17 +197,10 @@ rm -rf .build release
 
 After releasing:
 
-1. **Update Homebrew Formula**:
+1. **Update Separate Tap (Optional)**:
+
+   If using a separate `homebrew-ejson` tap repository:
    ```bash
-   # Run the update script with the new version
-   ./scripts/update-formula.sh 1.0.0
-
-   # Review and commit the changes
-   git add Formula/ejson.rb
-   git commit -m "Update Homebrew formula to v1.0.0"
-   git push
-
-   # If using a separate tap repository:
    cd ../homebrew-ejson
    cp ../swift-ejson/Formula/ejson.rb Formula/
    git add Formula/ejson.rb
@@ -162,7 +208,23 @@ After releasing:
    git push
    ```
 
+   Note: The formula in the main repo is already updated automatically.
+
 2. Announce the release (Twitter, forums, etc.)
 3. Update documentation sites if applicable
 4. Close related issues/PRs
 5. Plan next release milestone
+
+## Version Synchronization
+
+The version system ensures everything stays in sync:
+
+| Component | Source | How it Syncs |
+|-----------|--------|--------------|
+| **Library Version** | `Sources/EJSONKit/Version.swift` | Direct reference |
+| **Binary Version** | CLI `--version` flag | Imports from EJSONKit.Version |
+| **Git Tag** | GitHub Actions | Extracted via `scripts/get-version.sh` |
+| **GitHub Release** | GitHub Actions | Uses git tag |
+| **Homebrew Formula** | `Formula/ejson.rb` | Auto-updated by workflow |
+
+**To change version**: Edit `Sources/EJSONKit/Version.swift` only. Everything else updates automatically.
