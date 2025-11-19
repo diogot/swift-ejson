@@ -210,6 +210,11 @@ func decryptCommand(args: [String]) {
     }
 }
 
+func printVersion() {
+    print("ejson version 1.0.0")
+    print("Swift EJSON - Compatible with Shopify EJSON")
+}
+
 func printUsage() {
     print("""
     Usage: ejson <command> [options]
@@ -260,6 +265,8 @@ func main() {
         decryptCommand(args: commandArgs)
     case "-h", "--help", "help":
         printUsage()
+    case "-v", "--version", "version":
+        printVersion()
     default:
         exitWithError("Unknown command: \(command)\nRun 'ejson help' for usage information")
     }

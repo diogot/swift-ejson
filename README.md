@@ -284,7 +284,29 @@ EJSONKit includes a command-line tool compatible with the [Go EJSON CLI](https:/
 
 ### Installation
 
-#### Pre-built Binaries (Recommended)
+#### Homebrew (Recommended for macOS)
+
+The easiest way to install on macOS:
+
+```bash
+# Option 1: Via tap (after tap is set up)
+brew tap diogot/ejson
+brew install ejson
+
+# Option 2: Direct installation
+brew install https://raw.githubusercontent.com/diogot/swift-ejson/main/Formula/ejson.rb
+```
+
+Upgrade to the latest version:
+
+```bash
+brew update
+brew upgrade ejson
+```
+
+See [HOMEBREW.md](HOMEBREW.md) for detailed instructions on setting up the tap.
+
+#### Pre-built Binaries
 
 Download the latest release for your platform from [GitHub Releases](https://github.com/diogot/swift-ejson/releases):
 

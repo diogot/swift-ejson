@@ -144,7 +144,25 @@ rm -rf .build release
 
 After releasing:
 
-1. Announce the release (Twitter, forums, etc.)
-2. Update documentation sites if applicable
-3. Close related issues/PRs
-4. Plan next release milestone
+1. **Update Homebrew Formula**:
+   ```bash
+   # Run the update script with the new version
+   ./scripts/update-formula.sh 1.0.0
+
+   # Review and commit the changes
+   git add Formula/ejson.rb
+   git commit -m "Update Homebrew formula to v1.0.0"
+   git push
+
+   # If using a separate tap repository:
+   cd ../homebrew-ejson
+   cp ../swift-ejson/Formula/ejson.rb Formula/
+   git add Formula/ejson.rb
+   git commit -m "Update ejson to v1.0.0"
+   git push
+   ```
+
+2. Announce the release (Twitter, forums, etc.)
+3. Update documentation sites if applicable
+4. Close related issues/PRs
+5. Plan next release milestone
