@@ -168,7 +168,7 @@ The library has been fully implemented with:
 
 ## Installing Swift for Testing
 
-This project requires **Swift 5.9** or later.
+This project requires **Swift 6.2** or later.
 
 ### Prerequisites
 

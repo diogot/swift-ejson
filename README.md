@@ -325,7 +325,7 @@ cp .build/release/ejson /usr/local/bin/
 ```
 
 **Requirements:**
-- Swift 5.9+
+- Swift 6.2+
 - Linux only: libsodium-dev (`apt-get install libsodium-dev`)
 - macOS: No additional dependencies (uses bundled libsodium)
 
@@ -428,7 +428,7 @@ swift test
 
 ## Requirements
 
-- Swift 5.9+
+- Swift 6.2+
 - macOS 10.15+ / iOS 13+ / tvOS 13+ / watchOS 6+
 - Linux: libsodium-dev package required
 
