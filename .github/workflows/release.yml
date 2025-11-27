@@ -114,13 +114,10 @@ jobs:
           EOF
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: diogot/gh-actions-workflows/actions/create-release@main
         with:
-          body_path: release_notes.md
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body-file: release_notes.md
           files: |
             release/*.tar.gz
             release/*.sha256
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
