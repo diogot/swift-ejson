@@ -2,54 +2,57 @@
 
 This document describes how to create a new release of swift-ejson.
 
+## Version Management
+
+The version is managed via the `VERSION` file at the project root. This file is the single source of truth for the version number and is read at build time by the `BuildVersionPlugin` to inject the version into the CLI binary.
+
 ## Prerequisites
 
 - Write access to the repository
 - All tests passing on main branch
-- Updated CHANGELOG (if applicable)
 
 ## Release Steps
 
-### 1. Prepare the Release
+### 1. Update the VERSION file
 
-Ensure all changes for the release are merged to the main branch:
-
-```bash
-git checkout main
-git pull origin main
-```
-
-### 2. Update Version References
-
-Update version references in documentation if needed:
-
-- README.md (example version numbers in CLI installation)
-- Package.swift (if you maintain a version constant)
-
-### 3. Create and Push a Tag
-
-Create a version tag following semantic versioning (vMAJOR.MINOR.PATCH):
+Edit the `VERSION` file to contain the new version number:
 
 ```bash
-# Create an annotated tag
-git tag -a v1.0.0 -m "Release version 1.0.0"
-
-# Push the tag to GitHub
-git push origin v1.0.0
+echo "1.2.3" > VERSION
 ```
+
+Follow [Semantic Versioning](https://semver.org/):
+- **MAJOR** version: Incompatible API changes
+- **MINOR** version: New functionality (backwards compatible)
+- **PATCH** version: Bug fixes (backwards compatible)
+
+### 2. Commit and Push
+
+```bash
+git add VERSION
+git commit -m "Bump version to 1.2.3"
+git push origin main
+```
+
+### 3. Trigger the Release Workflow
+
+1. Go to the [Actions tab](https://github.com/diogot/swift-ejson/actions)
+2. Select the "Release" workflow from the left sidebar
+3. Click "Run workflow" button
+4. Select the `main` branch
+5. Click "Run workflow"
 
 ### 4. Automated Build Process
 
-Once you push the tag, GitHub Actions will automatically:
+The Release workflow will automatically:
 
-1. **Run Tests** - Ensure all tests pass on macOS and Linux
-2. **Build macOS Binary** - Create a universal binary (x86_64 + ARM64)
-3. **Create Archive** - Package the binary as `.tar.gz`
-4. **Calculate Checksums** - Generate SHA256 checksums
-5. **Create GitHub Release** - Publish release with all artifacts
-6. **Upload Assets** - Attach binaries and checksums
-
-You can monitor the progress at: `https://github.com/diogot/swift-ejson/actions`
+1. **Validate version** - Ensure VERSION > latest tag and tag doesn't exist
+2. **Run tests** - Ensure all tests pass
+3. **Build macOS binary** - Create a universal binary (x86_64 + ARM64)
+4. **Create archive** - Package the binary as `.tar.gz`
+5. **Calculate checksums** - Generate SHA256 checksums
+6. **Create GitHub Release** - Publish release with tag `v{VERSION}`
+7. **Upload assets** - Attach binaries and checksums
 
 ### 5. Verify the Release
 
@@ -57,6 +60,7 @@ After the workflow completes:
 
 1. Go to https://github.com/diogot/swift-ejson/releases
 2. Verify the release was created with:
+   - Correct version tag (e.g., `v1.2.3`)
    - Release notes
    - Binary archive (`.tar.gz`)
    - Checksum file (`.sha256`)
@@ -66,9 +70,9 @@ After the workflow completes:
 Download and test the binary:
 
 ```bash
-VERSION="1.0.0"
+VERSION="1.2.3"
 curl -L "https://github.com/diogot/swift-ejson/releases/download/v${VERSION}/ejson-${VERSION}-macos-universal.tar.gz" | tar xz
-./ejson help
+./ejson --version
 ./ejson keygen
 ```
 
@@ -79,21 +83,14 @@ curl -L "https://github.com/diogot/swift-ejson/releases/download/v${VERSION}/ejs
 shasum -a 256 -c ejson.sha256
 ```
 
-## Versioning Guidelines
-
-We follow [Semantic Versioning](https://semver.org/):
-
-- **MAJOR** version: Incompatible API changes
-- **MINOR** version: New functionality (backwards compatible)
-- **PATCH** version: Bug fixes (backwards compatible)
-
-Examples:
-- `v1.0.0` - Initial stable release
-- `v1.1.0` - Add new features
-- `v1.0.1` - Bug fixes
-- `v2.0.0` - Breaking changes
-
 ## Troubleshooting
+
+### Version Validation Fails
+
+If the release workflow fails with version validation errors:
+
+1. **"Tag already exists"** - The VERSION matches an existing release. Bump the version.
+2. **"Version must be greater than latest tag"** - Ensure VERSION > latest tag (e.g., 1.2.3 > 1.2.2)
 
 ### Build Fails
 
@@ -101,17 +98,8 @@ If the GitHub Actions workflow fails:
 
 1. Check the Actions tab for error details
 2. Fix issues in a new commit/PR
-3. Delete the tag: `git tag -d v1.0.0 && git push origin :refs/tags/v1.0.0`
-4. Create a new tag after fixes are merged
-
-### Release Already Exists
-
-If you need to update a release:
-
-1. Go to the Releases page
-2. Edit the release
-3. Delete old assets if needed
-4. Manually upload new assets (or delete the release and re-run workflow)
+3. Merge to main
+4. Re-run the Release workflow
 
 ## Manual Release (Fallback)
 
@@ -124,27 +112,17 @@ If automated builds fail, you can create a release manually:
 rm -rf .build release
 
 # Run build script
-./scripts/build-release.sh 1.0.0
+./scripts/build-release.sh 1.2.3
 
 # Verify the binary
-./release/ejson help
+./release/ejson --version
 ```
 
 ### Create Release on GitHub
 
-1. Go to https://github.com/diogot/swift-ejson/releases/new
-2. Choose the tag (v1.0.0)
-3. Fill in the release title and description
-4. Upload the files from `release/` directory:
-   - `ejson-1.0.0-macos-universal.tar.gz`
-   - `ejson-1.0.0-macos-universal.tar.gz.sha256`
-5. Click "Publish release"
-
-## Post-Release
-
-After releasing:
-
-1. Announce the release (Twitter, forums, etc.)
-2. Update documentation sites if applicable
-3. Close related issues/PRs
-4. Plan next release milestone
+1. Create and push a tag: `git tag v1.2.3 && git push origin v1.2.3`
+2. Go to https://github.com/diogot/swift-ejson/releases/new
+3. Choose the tag (v1.2.3)
+4. Fill in the release title and description
+5. Upload the files from `release/` directory
+6. Click "Publish release"

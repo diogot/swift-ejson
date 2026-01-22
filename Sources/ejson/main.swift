@@ -260,6 +260,8 @@ func main() {
         decryptCommand(args: commandArgs)
     case "-h", "--help", "help":
         printUsage()
+    case "-v", "--version", "version":
+        print(GeneratedVersion.version)
     default:
         exitWithError("Unknown command: \(command)\nRun 'ejson help' for usage information")
     }
