@@ -48,20 +48,20 @@ if [[ "$PLATFORM" == "macos" ]]; then
             "$BUILD_DIR/arm64-apple-macosx/release/$PRODUCT_NAME" \
             -output "$RELEASE_DIR/$PRODUCT_NAME"
 
-        ARCHIVE_NAME="${PRODUCT_NAME}-${VERSION}-macos-universal.tar.gz"
+        ARCHIVE_NAME="${PRODUCT_NAME}-macos-universal.tar.gz"
     else
         # Non-Apple Swift (shouldn't happen on macOS, but just in case)
         echo "Building for current architecture..."
         swift build -c release
         cp "$BUILD_DIR/release/$PRODUCT_NAME" "$RELEASE_DIR/"
-        ARCHIVE_NAME="${PRODUCT_NAME}-${VERSION}-macos.tar.gz"
+        ARCHIVE_NAME="${PRODUCT_NAME}-macos.tar.gz"
     fi
 
 elif [[ "$PLATFORM" == "linux" ]]; then
     echo "Building for Linux..."
     swift build -c release
     cp "$BUILD_DIR/release/$PRODUCT_NAME" "$RELEASE_DIR/"
-    ARCHIVE_NAME="${PRODUCT_NAME}-${VERSION}-linux-$(uname -m).tar.gz"
+    ARCHIVE_NAME="${PRODUCT_NAME}-linux-$(uname -m).tar.gz"
 fi
 
 # Verify the binary
@@ -72,24 +72,14 @@ echo "Verifying binary..."
 echo "Creating archive: $ARCHIVE_NAME"
 cd "$RELEASE_DIR"
 tar -czf "$ARCHIVE_NAME" "$PRODUCT_NAME"
-
-# Create latest archive (without version) for GitHub latest release URL
-if [[ "$PLATFORM" == "macos" ]]; then
-    LATEST_ARCHIVE="${PRODUCT_NAME}-macos-universal.tar.gz"
-else
-    LATEST_ARCHIVE="${PRODUCT_NAME}-linux-$(uname -m).tar.gz"
-fi
-cp "$ARCHIVE_NAME" "$LATEST_ARCHIVE"
 cd ..
 
 # Calculate checksums
 echo "Calculating checksums..."
 if command -v sha256sum &> /dev/null; then
     sha256sum "$RELEASE_DIR/$ARCHIVE_NAME" > "$RELEASE_DIR/$ARCHIVE_NAME.sha256"
-    sha256sum "$RELEASE_DIR/$LATEST_ARCHIVE" > "$RELEASE_DIR/$LATEST_ARCHIVE.sha256"
 elif command -v shasum &> /dev/null; then
     shasum -a 256 "$RELEASE_DIR/$ARCHIVE_NAME" > "$RELEASE_DIR/$ARCHIVE_NAME.sha256"
-    shasum -a 256 "$RELEASE_DIR/$LATEST_ARCHIVE" > "$RELEASE_DIR/$LATEST_ARCHIVE.sha256"
 fi
 
 echo ""
