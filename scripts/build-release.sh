@@ -72,14 +72,24 @@ echo "Verifying binary..."
 echo "Creating archive: $ARCHIVE_NAME"
 cd "$RELEASE_DIR"
 tar -czf "$ARCHIVE_NAME" "$PRODUCT_NAME"
+
+# Create latest archive (without version) for GitHub latest release URL
+if [[ "$PLATFORM" == "macos" ]]; then
+    LATEST_ARCHIVE="${PRODUCT_NAME}-macos-universal.tar.gz"
+else
+    LATEST_ARCHIVE="${PRODUCT_NAME}-linux-$(uname -m).tar.gz"
+fi
+cp "$ARCHIVE_NAME" "$LATEST_ARCHIVE"
 cd ..
 
 # Calculate checksums
 echo "Calculating checksums..."
 if command -v sha256sum &> /dev/null; then
     sha256sum "$RELEASE_DIR/$ARCHIVE_NAME" > "$RELEASE_DIR/$ARCHIVE_NAME.sha256"
+    sha256sum "$RELEASE_DIR/$LATEST_ARCHIVE" > "$RELEASE_DIR/$LATEST_ARCHIVE.sha256"
 elif command -v shasum &> /dev/null; then
     shasum -a 256 "$RELEASE_DIR/$ARCHIVE_NAME" > "$RELEASE_DIR/$ARCHIVE_NAME.sha256"
+    shasum -a 256 "$RELEASE_DIR/$LATEST_ARCHIVE" > "$RELEASE_DIR/$LATEST_ARCHIVE.sha256"
 fi
 
 echo ""

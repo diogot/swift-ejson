@@ -292,17 +292,16 @@ Download the latest release for your platform from [GitHub Releases](https://git
 
 ```bash
 # Download and install the latest version
-VERSION="1.0.0"  # Replace with latest version
-curl -L "https://github.com/diogot/swift-ejson/releases/download/v${VERSION}/ejson-${VERSION}-macos-universal.tar.gz" | tar xz
+curl -L https://github.com/diogot/swift-ejson/releases/latest/download/ejson-macos-universal.tar.gz | tar xz
 sudo mv ejson /usr/local/bin/
-ejson help
+ejson --version
 ```
 
 **Verify the checksum:**
 
 ```bash
 # Download checksum
-curl -L "https://github.com/diogot/swift-ejson/releases/download/v${VERSION}/ejson-${VERSION}-macos-universal.tar.gz.sha256" -o ejson.sha256
+curl -L https://github.com/diogot/swift-ejson/releases/latest/download/ejson-macos-universal.tar.gz.sha256 -o ejson.sha256
 
 # Verify
 shasum -a 256 -c ejson.sha256
@@ -341,6 +340,7 @@ Commands:
 
 Global Options:
   -keydir <path>    Path to keydir (default: /opt/ejson/keys or $EJSON_KEYDIR)
+  --version, -v     Print version and exit
 
 Keygen Options:
   -w                Write private key to keydir and print only public key
@@ -424,7 +424,7 @@ swift test
 
 ## Dependencies
 
-- [swift-sodium](https://github.com/jedisct1/swift-sodium) (v0.9.1+) - Provides NaCl cryptography primitives with bundled libsodium
+- [swift-sodium](https://github.com/jedisct1/swift-sodium) (v0.10.0+) - Provides NaCl cryptography primitives with bundled libsodium
 
 ## Requirements
 
@@ -440,6 +440,14 @@ Contributions are welcome! Please ensure:
 - New features include tests
 - Code follows Swift conventions
 - Changes maintain compatibility with Go EJSON
+
+### Version Management
+
+The version is managed via the `VERSION` file at the project root. Before creating a release:
+
+1. Update the `VERSION` file with the new version number
+2. Commit and push to `main`
+3. Trigger the Release workflow manually from GitHub Actions
 
 ## License
 
